@@ -1,0 +1,27 @@
+# Dependency directories
+node_modules/
+
+# Local env files - CRITICAL: Never push these to GitHub as they contain secrets!
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+.env.development
+
+# Build outputs
+frontend/dist/
+dist/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
