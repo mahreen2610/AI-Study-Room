@@ -53,6 +53,7 @@ ${context}`;
         hostname: 'api.groq.com',
         path: '/openai/v1/chat/completions',
         method: 'POST',
+        family: 4, // Force IPv4 resolution to bypass DNS/IPv6 routing bugs on Render
         headers: {
           'Authorization': `Bearer ${groqApiKey}`,
           'Content-Type': 'application/json',

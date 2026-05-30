@@ -8,7 +8,7 @@ if (!hfToken) {
 
 /**
  * Generates a 768-dimensional vector embedding for the given text using Hugging Face all-mpnet-base-v2.
- * Uses native https to avoid DNS/IPv6 experimental fetch issues in Node.js.
+ * Uses native https with family: 4 to resolve DNS using IPv4 on Render's virtual networks.
  * @param {string} text - The input text to embed.
  * @returns {Promise<number[]>} The embedding vector array.
  */
@@ -18,8 +18,9 @@ async function getEmbedding(text) {
     
     const options = {
       hostname: 'api-inference.huggingface.co',
-      path: '/pipeline/feature-extraction/sentence-transformers/all-mpnet-base-v2',
+      path: '/models/sentence-transformers/all-mpnet-base-v2',
       method: 'POST',
+      family: 4, // Force IPv4 resolution to bypass DNS/IPv6 routing bugs on Render
       headers: {
         'Authorization': `Bearer ${hfToken}`,
         'Content-Type': 'application/json',
@@ -63,5 +64,6 @@ async function getEmbedding(text) {
 }
 
 module.exports = { getEmbedding };
+
 
 
