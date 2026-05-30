@@ -73,6 +73,7 @@ export default function Dashboard() {
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', overflow: 'hidden' }}>
       {/* Top Navbar */}
       <header 
+        className="dashboard-header"
         style={{ 
           background: 'var(--bg-secondary)', 
           borderBottom: '1px solid var(--border-color)',
@@ -83,6 +84,7 @@ export default function Dashboard() {
         }}
       >
         <div 
+          className="dashboard-header-container"
           style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
@@ -92,7 +94,7 @@ export default function Dashboard() {
             margin: '0 auto' 
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="dashboard-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ color: 'var(--accent-indigo)', display: 'flex', alignItems: 'center' }}>
               <BookOpen size={24} />
             </div>
@@ -101,8 +103,8 @@ export default function Dashboard() {
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div className="dashboard-header-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div className="dashboard-header-profile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
               <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#fff' }}>
                 {profile?.username || 'Loading...'}
               </span>

@@ -557,8 +557,11 @@ input, textarea, select {
     padding: 10px 16px;
     justify-content: space-around;
     align-items: center;
-    position: relative;
-    z-index: 10;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
     height: 60px;
     box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
   }
@@ -588,6 +591,11 @@ input, textarea, select {
     background: rgba(20, 184, 166, 0.08);
   }
 
+  /* Add bottom clearance padding to room panels so content isn't hidden under the fixed tab bar */
+  .room-sidebar, .room-main-container {
+    padding-bottom: 60px !important;
+  }
+
   /* Adjust chat panel layout inside tab view */
   .room-human-chat, .room-ai-chat {
     height: 100% !important;
@@ -597,6 +605,23 @@ input, textarea, select {
   /* Adjust document upload area width */
   .room-sidebar > div {
     width: 100%;
+  }
+
+  /* Dashboard Header Mobile Adjustments */
+  .dashboard-header {
+    padding: 0 16px !important;
+  }
+
+  .dashboard-header-profile {
+    display: none !important;
+  }
+
+  .dashboard-header-left span {
+    font-size: 1.1rem !important;
+  }
+
+  .dashboard-header-right {
+    gap: 8px !important;
   }
 
   /* Landing Page adjustments */
