@@ -1,35 +1,45 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  console.warn('CRITICAL: GEMINI_API_KEY is missing from environment variables.');
+const hfToken = process.env.HF_TOKEN;
+if (!hfToken) {
+  console.warn('CRITICAL: HF_TOKEN is missing from environment variables.');
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
-
 /**
- * Generates a 768-dimensional vector embedding for the given text.
+ * Generates a 768-dimensional vector embedding for the given text using Hugging Face all-mpnet-base-v2.
  * @param {string} text - The input text to embed.
  * @returns {Promise<number[]>} The embedding vector array.
  */
 async function getEmbedding(text) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
-    const result = await model.embedContent({
-      content: { parts: [{ text: text }] },
-      outputDimensionality: 768
-    });
-    
-    if (result && result.embedding && result.embedding.values) {
-      return result.embedding.values;
+    const response = await fetch(
+      'https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-mpnet-base-v2',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${hfToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ inputs: text })
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Hugging Face API error: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    if (Array.isArray(result)) {
+      return result;
     } else {
-      throw new Error('Failed to retrieve embedding values from Gemini API response');
+      throw new Error('Failed to retrieve embedding values from Hugging Face API response');
     }
   } catch (error) {
-    console.error('Error in getEmbedding:', error);
+    console.error('Error in getEmbedding (Hugging Face):', error);
     throw error;
   }
 }
 
 module.exports = { getEmbedding };
+

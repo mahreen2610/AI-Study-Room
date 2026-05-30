@@ -1,15 +1,13 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  console.warn('CRITICAL: GEMINI_API_KEY is missing from environment variables.');
+const groqApiKey = process.env.GROQ_API_KEY;
+if (!groqApiKey) {
+  console.warn('CRITICAL: GROQ_API_KEY is missing from environment variables.');
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
-
 /**
- * Generates a generative model stream based on context, history, and a user question.
+ * Generates a generative model stream based on context, history, and a user question using Groq (llama-3.1-8b-instant).
+ * Yields OpenAI chunks mapped to a standard Gemini chunk interface ({ text: () => chunk }) to prevent breaking controllers.
  * @param {string} context - The retrieved document chunks concatenated.
  * @param {Array} history - Array of last 6 messages. Format: { role: 'user'|'assistant', content: string }
  * @param {string} question - The user's query.
@@ -22,43 +20,83 @@ async function generateStream(context, history, question) {
 Context:
 ${context}`;
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      systemInstruction: systemPrompt
-    });
+    const messages = [
+      { role: 'system', content: systemPrompt }
+    ];
 
-    // Map history and prompt contents
-    const contents = [];
-
-    // Ensure roles are alternating and correct
-    // Gemini roles: 'user', 'model'
+    // Map history to OpenAI roles
     history.forEach((msg) => {
-      const role = msg.role === 'assistant' ? 'model' : 'user';
-      contents.push({
-        role: role,
-        parts: [{ text: msg.content }]
+      messages.push({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: msg.content
       });
     });
 
     // Append user question
-    contents.push({
+    messages.push({
       role: 'user',
-      parts: [{ text: question }]
+      content: question
     });
 
-    const responseStream = await model.generateContentStream({
-      contents: contents,
-      generationConfig: {
-        maxOutputTokens: 2048,
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${groqApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: messages,
         temperature: 0.2,
-      }
+        max_tokens: 2048,
+        stream: true
+      })
     });
 
-    return responseStream.stream;
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Groq API error: ${response.status} - ${errText}`);
+    }
+
+    // Generator function that yield chunks wrapped in a Gemini-like { text() } helper
+    async function* makeOpenAIStreamGenerator() {
+      const reader = response.body;
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      for await (const chunk of reader) {
+        buffer += typeof chunk === 'string' ? chunk : decoder.decode(chunk, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          const cleanLine = line.trim();
+          if (!cleanLine) continue;
+          if (cleanLine === 'data: [DONE]') continue;
+
+          if (cleanLine.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(cleanLine.slice(6));
+              const textChunk = data.choices?.[0]?.delta?.content || '';
+              if (textChunk) {
+                yield {
+                  text: () => textChunk
+                };
+              }
+            } catch (e) {
+              // Ignore partial JSON parsing errors
+            }
+          }
+        }
+      }
+    }
+
+    return makeOpenAIStreamGenerator();
   } catch (error) {
-    console.error('Error generating AI stream:', error);
+    console.error('Error generating AI stream (Groq):', error);
     throw error;
   }
 }
 
 module.exports = { generateStream };
+
