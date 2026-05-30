@@ -13,6 +13,14 @@ export default function SignupForm({ onSuccess }) {
   const [successMsg, setSuccessMsg] = useState(null);
   const navigate = useNavigate();
 
+  const requirements = [
+    { label: 'Minimum 8 characters', met: password.length >= 8 },
+    { label: 'One uppercase letter (A-Z)', met: /[A-Z]/.test(password) },
+    { label: 'One lowercase letter (a-z)', met: /[a-z]/.test(password) },
+    { label: 'One number (0-9)', met: /\d/.test(password) },
+    { label: 'One special character (e.g. !, @, #, $, %)', met: /[^A-Za-z0-9]/.test(password) }
+  ];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !username || !password || !confirmPassword) {
@@ -25,8 +33,9 @@ export default function SignupForm({ onSuccess }) {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    const unmetReq = requirements.find(r => !r.met);
+    if (unmetReq) {
+      setError(`Password does not meet requirements: ${unmetReq.label}`);
       return;
     }
 
@@ -117,7 +126,7 @@ export default function SignupForm({ onSuccess }) {
 
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-gray-300" htmlFor="password">
-            Password (min. 6 characters)
+            Password
           </label>
           <input
             id="password"
@@ -128,6 +137,17 @@ export default function SignupForm({ onSuccess }) {
             disabled={loading}
             required
           />
+          {password.length > 0 && (
+            <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(255,255,255,0.01)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '2px' }}>Password Requirements:</span>
+              {requirements.map((req, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: req.met ? 'var(--accent-teal)' : 'var(--text-muted)', transition: 'color var(--transition-fast)' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{req.met ? '✓' : '•'}</span>
+                  <span>{req.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
