@@ -7,6 +7,7 @@ export default function RoomHeader({ room, onInviteClick }) {
 
   return (
     <header 
+      className="room-header"
       style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
@@ -17,7 +18,7 @@ export default function RoomHeader({ room, onInviteClick }) {
         height: '70px'
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="room-header-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <button 
           className="btn-icon" 
           onClick={() => navigate('/dashboard')}
@@ -36,7 +37,7 @@ export default function RoomHeader({ room, onInviteClick }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="room-header-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div 
           style={{ 
             display: 'flex', 

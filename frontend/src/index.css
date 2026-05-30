@@ -486,3 +486,123 @@ input, textarea, select {
   width: 100%;
 }
 
+/* Mobile responsive navigation styles */
+.mobile-tab-bar {
+  display: none;
+}
+
+/* Responsive Styles for Phone & Tablet screens */
+@media (max-width: 900px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Room layout modifications */
+  .room-sidebar {
+    display: none !important;
+    width: 100% !important;
+    border-right: none !important;
+  }
+  .room-sidebar.active {
+    display: flex !important;
+  }
+
+  .room-main-container {
+    flex-direction: column !important;
+  }
+
+  .room-human-chat {
+    display: none !important;
+  }
+  .room-human-chat.active {
+    display: block !important;
+  }
+
+  .room-ai-chat {
+    display: none !important;
+  }
+  .room-ai-chat.active {
+    display: block !important;
+  }
+
+  /* Room Header responsiveness overrides */
+  .room-header {
+    padding: 10px 16px !important;
+    height: auto !important;
+    min-height: 70px !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+  .room-header-left {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .room-header-right {
+    width: 100% !important;
+    justify-content: space-between !important;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  /* Bottom Tab Selector bar for mobile devices */
+  .mobile-tab-bar {
+    display: flex !important;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: 10px 16px;
+    justify-content: space-around;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+    height: 60px;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .mobile-tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 6px 16px;
+    border-radius: 10px;
+    transition: all var(--transition-fast);
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+
+  .mobile-tab-btn:hover {
+    color: var(--text-primary);
+  }
+
+  .mobile-tab-btn.active {
+    color: var(--accent-teal);
+    background: rgba(20, 184, 166, 0.08);
+  }
+
+  /* Adjust chat panel layout inside tab view */
+  .room-human-chat, .room-ai-chat {
+    height: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Adjust document upload area width */
+  .room-sidebar > div {
+    width: 100%;
+  }
+
+  /* Landing Page adjustments */
+  h1 {
+    font-size: 2.2rem !important;
+    line-height: 1.2 !important;
+  }
+}
+

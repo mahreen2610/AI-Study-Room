@@ -144,7 +144,7 @@ export default function Dashboard() {
         </div>
 
         {/* Layout split: Rooms catalog / Room Controls */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px', alignItems: 'start' }}>
+        <div className="dashboard-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px', alignItems: 'start' }}>
           
           {/* Rooms Grid */}
           <div>

@@ -9,7 +9,7 @@ import ChatWindow from '../components/chat/ChatWindow';
 import AIChatWindow from '../components/ai/AIChatWindow';
 import FileUpload from '../components/upload/FileUpload';
 import DocumentList from '../components/upload/DocumentList';
-import { FileUp, BookOpen, AlertTriangle } from 'lucide-react';
+import { FileUp, BookOpen, AlertTriangle, MessageSquare, Sparkles } from 'lucide-react';
 
 export default function Room() {
   const { roomId } = useParams();
@@ -20,6 +20,7 @@ export default function Room() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [successToast, setSuccessToast] = useState(null);
   const [errorToast, setErrorToast] = useState(null);
+  const [activeTab, setActiveTab] = useState('chat'); // 'docs', 'chat', 'ai'
 
   // Track document states to trigger notifications (e.g. from processing -> ready)
   const [prevDocStatuses, setPrevDocStatuses] = useState({});
@@ -110,6 +111,7 @@ export default function Room() {
         
         {/* Left Side Panel - Document Workspace */}
         <aside 
+          className={`room-sidebar ${activeTab === 'docs' ? 'active' : ''}`}
           style={{ 
             width: 'var(--sidebar-width)', 
             background: 'var(--bg-primary)', 
@@ -141,9 +143,9 @@ export default function Room() {
         </aside>
 
         {/* Central columns (Human Chat + AI Chat split) */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <div className="room-main-container" style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Middle Column - Human Chat */}
-          <div style={{ flex: 1, height: '100%' }}>
+          <div className={`room-human-chat ${activeTab === 'chat' ? 'active' : ''}`} style={{ flex: 1, height: '100%' }}>
             <ChatWindow 
               messages={messages} 
               loading={humanLoading} 
@@ -152,7 +154,7 @@ export default function Room() {
           </div>
 
           {/* Right Column - AI Chat */}
-          <div style={{ flex: 1, height: '100%' }}>
+          <div className={`room-ai-chat ${activeTab === 'ai' ? 'active' : ''}`} style={{ flex: 1, height: '100%' }}>
             <AIChatWindow 
               messages={aiMessages} 
               loading={aiLoading} 
@@ -162,6 +164,31 @@ export default function Room() {
           </div>
         </div>
 
+      </div>
+
+      {/* Mobile Tab Switching Bar */}
+      <div className="mobile-tab-bar">
+        <button 
+          onClick={() => setActiveTab('docs')} 
+          className={`mobile-tab-btn ${activeTab === 'docs' ? 'active' : ''}`}
+        >
+          <BookOpen size={18} />
+          <span>Materials</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('chat')} 
+          className={`mobile-tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
+        >
+          <MessageSquare size={18} />
+          <span>Group Chat</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('ai')} 
+          className={`mobile-tab-btn ${activeTab === 'ai' ? 'active' : ''}`}
+        >
+          <Sparkles size={18} />
+          <span>AI Chat</span>
+        </button>
       </div>
 
       {/* Invite Modal */}
