@@ -74,7 +74,7 @@ export default function Landing() {
             margin: '0 auto'
           }}
         >
-          Upload your PDFs, chat in real-time with your study group, and get instant answers from a Gemini AI context-trained on your study materials.
+          Upload your PDFs, chat in real-time with your study group, and get instant answers from a powerful AI assistant context-trained on your study materials.
         </p>
 
         {/* Buttons */}
@@ -144,9 +144,9 @@ export default function Landing() {
             <div style={{ color: 'var(--accent-teal)', display: 'inline-flex', padding: '8px', background: 'rgba(20,184,166,0.08)', borderRadius: '8px' }}>
               <BrainCircuit size={20} />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#fff' }}>Gemini RAG Assistant</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#fff' }}>AI RAG Assistant</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-              Ask questions directly. The bot fetches exact passages from your materials and answers with Gemini 2.0 Flash.
+              Ask questions directly. The bot fetches exact passages from your materials and answers instantly using advanced AI models.
             </p>
           </div>
         </div>

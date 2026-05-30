@@ -138,7 +138,7 @@ export default function Dashboard() {
               Hello, <span className="gradient-text">{profile?.username || 'Scholar'}</span>!
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', maxWidth: '600px', lineHeight: '1.5' }}>
-              Welcome back to your study headquarters. Collaborate in real-time with your peers and let Gemini analyze your study documents to solve complex topics.
+              Welcome back to your study headquarters. Collaborate in real-time with your peers and let the AI analyze your study documents to solve complex topics.
             </p>
           </div>
         </div>

@@ -105,7 +105,7 @@ export default function AIChatMessage({ message }) {
           }}
         >
           <span style={{ fontWeight: '600', color: '#fff' }}>
-            {isAI ? 'Gemini Study Assistant' : 'You (AI Inquiry)'}
+            {isAI ? 'AI Study Assistant' : 'You (AI Inquiry)'}
           </span>
           <span style={{ color: 'var(--text-muted)' }}>
             {formatTime(message.created_at)}

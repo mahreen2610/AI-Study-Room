@@ -67,7 +67,7 @@ export default function AIChatWindow({ messages, loading, streamingText, onSendM
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Sparkles size={16} color="var(--accent-teal)" />
-          <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>Gemini RAG Assistant</span>
+          <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>AI RAG Assistant</span>
         </div>
         <span 
           style={{ 
@@ -79,7 +79,7 @@ export default function AIChatWindow({ messages, loading, streamingText, onSendM
             fontWeight: '600'
           }}
         >
-          Flash 2.0
+          Llama 3.1
         </span>
       </div>
 
@@ -147,7 +147,7 @@ export default function AIChatWindow({ messages, loading, streamingText, onSendM
                 }}
               >
                 <div className="spinner" style={{ width: '16px', height: '16px' }}></div>
-                <span>Gemini is thinking...</span>
+                <span>AI is thinking...</span>
               </div>
             )}
           </>
