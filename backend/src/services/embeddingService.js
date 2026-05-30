@@ -17,7 +17,7 @@ async function getEmbedding(text) {
     const postData = JSON.stringify({ inputs: text });
     
     const options = {
-      hostname: 'api-inference.huggingface.co',
+      hostname: 'router.huggingface.co',
       path: '/models/sentence-transformers/all-mpnet-base-v2',
       method: 'POST',
       family: 4, // Force IPv4 resolution to bypass DNS/IPv6 routing bugs on Render
