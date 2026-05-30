@@ -1,3 +1,4 @@
+const https = require('https');
 require('dotenv').config();
 
 const groqApiKey = process.env.GROQ_API_KEY;
@@ -8,6 +9,7 @@ if (!groqApiKey) {
 /**
  * Generates a generative model stream based on context, history, and a user question using Groq (llama-3.1-8b-instant).
  * Yields OpenAI chunks mapped to a standard Gemini chunk interface ({ text: () => chunk }) to prevent breaking controllers.
+ * Uses native https to avoid DNS/IPv6 experimental fetch issues in Node.js.
  * @param {string} context - The retrieved document chunks concatenated.
  * @param {Array} history - Array of last 6 messages. Format: { role: 'user'|'assistant', content: string }
  * @param {string} question - The user's query.
@@ -38,60 +40,77 @@ ${context}`;
       content: question
     });
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        messages: messages,
-        temperature: 0.2,
-        max_tokens: 2048,
-        stream: true
-      })
+    const postData = JSON.stringify({
+      model: 'llama-3.1-8b-instant',
+      messages: messages,
+      temperature: 0.2,
+      max_tokens: 2048,
+      stream: true
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Groq API error: ${response.status} - ${errText}`);
-    }
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.groq.com',
+        path: '/openai/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${groqApiKey}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      };
 
-    // Generator function that yield chunks wrapped in a Gemini-like { text() } helper
-    async function* makeOpenAIStreamGenerator() {
-      const reader = response.body;
-      const decoder = new TextDecoder();
-      let buffer = '';
+      const req = https.request(options, (res) => {
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          let errData = '';
+          res.on('data', (c) => errData += c);
+          res.on('end', () => reject(new Error(`Groq API error: ${res.statusCode} - ${errData}`)));
+          return;
+        }
 
-      for await (const chunk of reader) {
-        buffer += typeof chunk === 'string' ? chunk : decoder.decode(chunk, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
+        // Generator function that yields chunks wrapped in a Gemini-like { text() } helper
+        async function* makeOpenAIStreamGenerator() {
+          const decoder = new TextDecoder();
+          let buffer = '';
 
-        for (const line of lines) {
-          const cleanLine = line.trim();
-          if (!cleanLine) continue;
-          if (cleanLine === 'data: [DONE]') continue;
+          for await (const chunk of res) {
+            buffer += typeof chunk === 'string' ? chunk : decoder.decode(chunk, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
 
-          if (cleanLine.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(cleanLine.slice(6));
-              const textChunk = data.choices?.[0]?.delta?.content || '';
-              if (textChunk) {
-                yield {
-                  text: () => textChunk
-                };
+            for (const line of lines) {
+              const cleanLine = line.trim();
+              if (!cleanLine) continue;
+              if (cleanLine === 'data: [DONE]') continue;
+
+              if (cleanLine.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(cleanLine.slice(6));
+                  const textChunk = data.choices?.[0]?.delta?.content || '';
+                  if (textChunk) {
+                    yield {
+                      text: () => textChunk
+                    };
+                  }
+                } catch (e) {
+                  // Ignore partial JSON parsing errors
+                }
               }
-            } catch (e) {
-              // Ignore partial JSON parsing errors
             }
           }
         }
-      }
-    }
 
-    return makeOpenAIStreamGenerator();
+        resolve(makeOpenAIStreamGenerator());
+      });
+
+      req.on('error', (e) => {
+        reject(new Error(`Groq connection failed: ${e.message}`));
+      });
+
+      req.write(postData);
+      req.end();
+    });
+
   } catch (error) {
     console.error('Error generating AI stream (Groq):', error);
     throw error;
