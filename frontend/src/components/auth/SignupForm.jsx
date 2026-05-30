@@ -50,7 +50,7 @@ export default function SignupForm({ onSuccess }) {
 
     try {
       await signUp(email, password, username.trim());
-      setSuccessMsg('Account created successfully! Please check your email for confirmation or proceed to login.');
+      setSuccessMsg('Account created successfully! A confirmation email has been sent to you from Supabase. Please check your inbox to verify your email before logging in.');
       
       // Clear inputs
       setEmail('');
@@ -65,7 +65,7 @@ export default function SignupForm({ onSuccess }) {
         } else {
           navigate('/login');
         }
-      }, 3000);
+      }, 6000);
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to sign up. Email may already be in use.');
