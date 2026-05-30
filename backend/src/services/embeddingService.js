@@ -18,7 +18,7 @@ async function getEmbedding(text) {
     
     const options = {
       hostname: 'router.huggingface.co',
-      path: '/models/sentence-transformers/all-mpnet-base-v2',
+      path: '/hf-inference/models/sentence-transformers/all-mpnet-base-v2',
       method: 'POST',
       family: 4, // Force IPv4 resolution to bypass DNS/IPv6 routing bugs on Render
       headers: {
