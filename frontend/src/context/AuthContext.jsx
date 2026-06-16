@@ -40,49 +40,74 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // 1. Hook to load profile whenever the user state changes
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadProfileForUser() {
+      if (user) {
+        // Skip duplicate profile fetch if it is already loaded and matches current user
+        if (profile && profile.id === user.id) {
+          setLoading(false);
+          return;
+        }
+
+        console.log(`[AuthContext] loadProfileForUser: fetching profile for user ID: ${user.id}...`);
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (isMounted) {
+            if (error) {
+              console.error('[AuthContext] loadProfileForUser database error:', error);
+            } else {
+              setProfile(data);
+            }
+          }
+        } catch (err) {
+          console.error('[AuthContext] loadProfileForUser exception:', err);
+        } finally {
+          if (isMounted) setLoading(false);
+        }
+      } else {
+        setProfile(null);
+        setLoading(false);
+      }
+    }
+
+    loadProfileForUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  // 2. Initial session load and auth subscription
   useEffect(() => {
     let isMounted = true;
 
     console.log('[AuthContext] Init: checking current session...');
     
-    // 1. Get initial session synchronously from supabase client cache if ready
+    // Get initial session synchronously from supabase client cache if ready
     const initialSession = getActiveSession();
     if (initialSession) {
       console.log('[AuthContext] Found initial session from activeSession cache');
       setUser(initialSession.user);
-      fetchProfile(initialSession.user.id);
     } else {
       console.log('[AuthContext] No initial session found in cache, will await subscription event');
     }
 
-    // 2. Subscribe to auth state changes to keep states in sync
+    // Subscribe to auth state changes to keep states in sync
     console.log('[AuthContext] Init: subscribing to onAuthStateChange...');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
       console.log(`[AuthContext] onAuthStateChange event fired: "${event}", session present: ${!!session}`);
       
-      setUser((prevUser) => {
-        const newUserId = session?.user?.id || null;
-        const prevUserId = prevUser?.id || null;
-        
-        if (newUserId !== prevUserId) {
-          console.log(`[AuthContext] User change detected: ${prevUserId} -> ${newUserId}`);
-          if (session) {
-            fetchProfile(session.user.id);
-          } else {
-            console.log('[AuthContext] No session, clearing profile and setting loading=false');
-            setProfile(null);
-            setLoading(false);
-          }
-        } else {
-          console.log('[AuthContext] User ID unchanged. Skipping duplicate profile fetch');
-          // If we had no session and user ID is still null, make sure loading is false
-          if (!session) {
-            setLoading(false);
-          }
-        }
-        return session ? session.user : null;
-      });
+      const currentUser = session ? session.user : null;
+      setUser(currentUser);
     });
 
     return () => {
@@ -129,9 +154,15 @@ export function AuthProvider({ children }) {
         throw error;
       }
       console.log('[AuthContext] signIn success');
+      
+      // Update state immediately to avoid routing race conditions
+      setUser(data.user);
+      await fetchProfile(data.user.id);
+      
       return data;
-    } finally {
+    } catch (err) {
       setLoading(false);
+      throw err;
     }
   };
 
