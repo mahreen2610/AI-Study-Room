@@ -7,8 +7,8 @@ AI Study Room is a premium, real-time web application that combines group study 
 ## 🚀 Key Features
 
 * **Real-time Peer Chat**: Collaborative chat rooms for study groups synced in real-time using Supabase WebSockets.
-* **Context-Aware AI Partner**: An interactive study assistant powered by Google Gemini 2.5 Flash.
-* **Document RAG Ingestion**: Upload PDFs to a study room, parse and chunk the text, compute vector embeddings (`text-embedding-004`), and query the AI using your uploaded notes.
+* **Context-Aware AI Partner**: An interactive study assistant powered by Google Gemini 1.5 Flash.
+* **Document RAG Ingestion**: Upload PDFs to a study room, parse and chunk the text, compute vector embeddings (`gemini-embedding-2`), and query the AI using your uploaded notes.
 * **Premium UI/UX**: A dark-theme responsive design featuring glassmorphism, smooth animations, and optimized layout scrolling.
 * **Cross-Browser Safe**: Optimized connection pooling prevents lock contentions on privacy-focused browsers like Brave and Chrome Incognito.
 
@@ -19,7 +19,7 @@ AI Study Room is a premium, real-time web application that combines group study 
 * **Frontend**: React (Vite), Axios, Lucide React, Custom CSS.
 * **Backend**: Node.js, Express, Multer (file uploads), PDF-Parse (text extraction).
 * **Database & Auth**: Supabase (PostgreSQL, `pgvector` extension, Storage Buckets, Auth, and Realtime Replication).
-* **AI Engine**: Google Gemini API (`gemini-2.5-flash` for reasoning & `text-embedding-004` for vectors).
+* **AI Engine**: Google Gemini API (`gemini-flash-latest` for reasoning & `gemini-embedding-2` for vectors).
 
 ---
 
