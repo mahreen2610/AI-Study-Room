@@ -79,7 +79,7 @@ export default function AIChatWindow({ messages, loading, streamingText, onSendM
             fontWeight: '600'
           }}
         >
-          Llama 3.1
+          Gemini 1.5 Flash
         </span>
       </div>
 

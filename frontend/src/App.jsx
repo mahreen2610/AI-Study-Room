@@ -17,6 +17,8 @@ import NotFound from './pages/NotFound';
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
 
+  console.log(`[ProtectedRoute] user: ${user ? user.email : 'null'}, loading: ${loading}`);
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--bg-primary)' }}>
@@ -26,6 +28,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) {
+    console.log('[ProtectedRoute] No user found, redirecting to /login');
     return <Navigate to="/login" replace />;
   }
 
@@ -38,6 +41,8 @@ function ProtectedRoute({ children }) {
 function PublicRoute({ children }) {
   const { user, loading } = useAuth();
 
+  console.log(`[PublicRoute] user: ${user ? user.email : 'null'}, loading: ${loading}`);
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--bg-primary)' }}>
@@ -47,6 +52,7 @@ function PublicRoute({ children }) {
   }
 
   if (user) {
+    console.log('[PublicRoute] User found, redirecting to /dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 

@@ -71,17 +71,19 @@ async function uploadDocument(req, res, next) {
       throw docError;
     }
 
-    console.log(`[Upload] Document row created in 'processing' status (ID: ${document.id}). Sending 201 response.`);
-    // Respond immediately to the frontend so it doesn't timeout
-    res.status(201).json(document);
+    // 3. Process the file (Upload, extract text, chunk, embed with Gemini)
+    console.log(`[Upload] Step 3: Processing document ${document.id}...`);
+    await processDocumentBackground(document.id, roomId, storagePath, file.buffer, file.mimetype);
 
-    // 3. Process the file in the background (Non-blocking)
-    console.log(`[Upload] Step 3: Starting background processor for document ${document.id}...`);
-    processDocumentBackground(document.id, roomId, storagePath, file.buffer, file.mimetype)
-      .catch((err) => {
-        console.error(`[Upload] Background processing exception for document ${document.id}:`, err);
-      });
+    // Fetch updated document status
+    const { data: updatedDoc } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', document.id)
+      .single();
 
+    console.log(`[Upload] Document processing complete. Final status: ${updatedDoc ? updatedDoc.status : 'ready'}`);
+    res.status(201).json(updatedDoc || document);
   } catch (error) {
     console.error('[Upload] Controller exception caught:', error);
     next(error);

@@ -1,15 +1,15 @@
-const https = require('https');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
-const groqApiKey = process.env.GROQ_API_KEY;
-if (!groqApiKey) {
-  console.warn('CRITICAL: GROQ_API_KEY is missing from environment variables.');
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  console.warn('CRITICAL: GEMINI_API_KEY is missing from environment variables.');
 }
 
+const genAI = new GoogleGenerativeAI(apiKey || '');
+
 /**
- * Generates a generative model stream based on context, history, and a user question using Groq (llama-3.1-8b-instant).
- * Yields OpenAI chunks mapped to a standard Gemini chunk interface ({ text: () => chunk }) to prevent breaking controllers.
- * Uses native https to avoid DNS/IPv6 experimental fetch issues in Node.js.
+ * Generates a generative model stream based on context, history, and a user question using Google Gemini.
  * @param {string} context - The retrieved document chunks concatenated.
  * @param {Array} history - Array of last 6 messages. Format: { role: 'user'|'assistant', content: string }
  * @param {string} question - The user's query.
@@ -17,106 +17,46 @@ if (!groqApiKey) {
  */
 async function generateStream(context, history, question) {
   try {
-    const systemPrompt = `You are a study assistant. Answer only based on the provided context. If the answer cannot be found or inferred from the provided context, state that you cannot answer based on the uploaded materials.
+    const systemInstruction = `You are a study assistant. Answer only based on the provided context. If the answer cannot be found or inferred from the provided context, state that you cannot answer based on the uploaded materials.
 
 Context:
 ${context}`;
 
-    const messages = [
-      { role: 'system', content: systemPrompt }
-    ];
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-flash-latest',
+      systemInstruction: systemInstruction
+    });
 
-    // Map history to OpenAI roles
+    // Map history to Gemini's chat format
+    // Format: { role: 'user'|'model', parts: [{ text: string }] }
+    const contents = [];
     history.forEach((msg) => {
-      messages.push({
-        role: msg.role === 'assistant' ? 'assistant' : 'user',
-        content: msg.content
+      contents.push({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
       });
     });
 
     // Append user question
-    messages.push({
+    contents.push({
       role: 'user',
-      content: question
+      parts: [{ text: question }]
     });
 
-    const postData = JSON.stringify({
-      model: 'llama-3.1-8b-instant',
-      messages: messages,
-      temperature: 0.2,
-      max_tokens: 2048,
-      stream: true
+    // Call generateContentStream
+    const result = await model.generateContentStream({
+      contents: contents,
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 2048
+      }
     });
 
-    return new Promise((resolve, reject) => {
-      const options = {
-        hostname: 'api.groq.com',
-        path: '/openai/v1/chat/completions',
-        method: 'POST',
-        family: 4, // Force IPv4 resolution to bypass DNS/IPv6 routing bugs on Render
-        headers: {
-          'Authorization': `Bearer ${groqApiKey}`,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(postData)
-        }
-      };
-
-      const req = https.request(options, (res) => {
-        if (res.statusCode < 200 || res.statusCode >= 300) {
-          let errData = '';
-          res.on('data', (c) => errData += c);
-          res.on('end', () => reject(new Error(`Groq API error: ${res.statusCode} - ${errData}`)));
-          return;
-        }
-
-        // Generator function that yields chunks wrapped in a Gemini-like { text() } helper
-        async function* makeOpenAIStreamGenerator() {
-          const decoder = new TextDecoder();
-          let buffer = '';
-
-          for await (const chunk of res) {
-            buffer += typeof chunk === 'string' ? chunk : decoder.decode(chunk, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop();
-
-            for (const line of lines) {
-              const cleanLine = line.trim();
-              if (!cleanLine) continue;
-              if (cleanLine === 'data: [DONE]') continue;
-
-              if (cleanLine.startsWith('data: ')) {
-                try {
-                  const data = JSON.parse(cleanLine.slice(6));
-                  const textChunk = data.choices?.[0]?.delta?.content || '';
-                  if (textChunk) {
-                    yield {
-                      text: () => textChunk
-                    };
-                  }
-                } catch (e) {
-                  // Ignore partial JSON parsing errors
-                }
-              }
-            }
-          }
-        }
-
-        resolve(makeOpenAIStreamGenerator());
-      });
-
-      req.on('error', (e) => {
-        reject(new Error(`Groq connection failed: ${e.message}`));
-      });
-
-      req.write(postData);
-      req.end();
-    });
-
+    return result.stream;
   } catch (error) {
-    console.error('Error generating AI stream (Groq):', error);
+    console.error('Error generating AI stream (Gemini):', error);
     throw error;
   }
 }
 
 module.exports = { generateStream };
-

@@ -14,7 +14,8 @@ const AuthContext = createContext({
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Helper to fetch user profiles
   async function fetchProfile(userId) {
@@ -48,11 +49,12 @@ export function AuthProvider({ children }) {
       if (user) {
         // Skip duplicate profile fetch if it is already loaded and matches current user
         if (profile && profile.id === user.id) {
-          setLoading(false);
+          if (isMounted && !isInitializing) setLoading(false);
           return;
         }
 
         console.log(`[AuthContext] loadProfileForUser: fetching profile for user ID: ${user.id}...`);
+        setLoading(true);
         try {
           const { data, error } = await supabase
             .from('profiles')
@@ -70,11 +72,11 @@ export function AuthProvider({ children }) {
         } catch (err) {
           console.error('[AuthContext] loadProfileForUser exception:', err);
         } finally {
-          if (isMounted) setLoading(false);
+          if (isMounted && !isInitializing) setLoading(false);
         }
       } else {
         setProfile(null);
-        setLoading(false);
+        if (isMounted && !isInitializing) setLoading(false);
       }
     }
 
@@ -83,7 +85,7 @@ export function AuthProvider({ children }) {
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, [user, isInitializing]);
 
   // 2. Initial session load and auth subscription
   useEffect(() => {
@@ -108,6 +110,7 @@ export function AuthProvider({ children }) {
       
       const currentUser = session ? session.user : null;
       setUser(currentUser);
+      setIsInitializing(false); // First event fired, initialization is complete!
     });
 
     return () => {
@@ -192,7 +195,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     profile,
-    loading,
+    loading: isInitializing || loading, // Combine initialization and profile load state
     signUp,
     signIn,
     signOut,
